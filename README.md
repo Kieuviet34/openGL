@@ -38,7 +38,7 @@
 Để tìm hiểu thêm về cách thiết lập OpenGL, bạn có thể tham khảo tài liệu tại [LearnOpenGL](https://learnopengl.com/).
 
 ## Cách chạy dự án:
-**run this command (already compliled and run in Makefile):**
+**run this command (already compliled and run in Makefile)**:
     ```bash
     make
     ```
