@@ -38,15 +38,9 @@
 Để tìm hiểu thêm về cách thiết lập OpenGL, bạn có thể tham khảo tài liệu tại [LearnOpenGL](https://learnopengl.com/).
 
 ## Cách chạy dự án
-1. **Biên dịch mã nguồn**:
-    Chạy lệnh sau trong thư mục dự án:
+    run this command (already compliled and run in Makefile):
     ```bash
-    g++ -o main main.cpp -lglfw -lGL -lGLEW
-    ```
-
-2. **Chạy chương trình**:
-    ```bash
-    ./main
+    make
     ```
 
 ## Ghi chú
