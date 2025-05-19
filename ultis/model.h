@@ -1,7 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "glad.h"
+#include "../lib/glad.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "shaderReader.h"
@@ -10,8 +10,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "../lib/stb_image.h"
 
 #include <string>
 #include <fstream>
