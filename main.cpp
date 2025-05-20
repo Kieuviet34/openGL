@@ -10,6 +10,8 @@
 #include "ultis/camera.h"
 #include "object/axes.h"
 #include "object/cube.h"
+#include "object/grass.h"
+#include "object/ground.h"
 #include "ultis/model.h"
 #include "object/skybox.h"
 #include <glm/glm.hpp>
@@ -83,6 +85,7 @@ int main(){
     
     Shader shader("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
     Shader skyboxShader("shaders/skybox.vs", "shaders/skybox.fs");
+    Shader grassShader("shaders/grassVertex.gsls", "shaders/grassFragment.gsls");
     Axes axes;
     Cube cube;
     vector<std::string> faces{
@@ -94,6 +97,17 @@ int main(){
         "assets/skybox/back.jpg"  
     };
     Skybox skybox(faces);
+    unsigned int groundTexture = loadTexture("assets/texture/ground.jpg");
+    Ground ground(groundTexture);
+        vector<glm::vec3> vegetation 
+        {
+            glm::vec3(-1.5f, 0.0f, -0.48f),
+            glm::vec3( 1.5f, 0.0f, 0.51f),
+            glm::vec3( 0.0f, 0.0f, 0.7f),
+            glm::vec3(-0.3f, 0.0f, -2.3f),
+            glm::vec3 (0.5f, 0.0f, -0.6f)
+        };
+    Grass grass("assets/texture/grass.png", vegetation);
     bool showAxes = false;
 
     // Cube position variables
@@ -119,7 +133,6 @@ int main(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.use();
-
         // Set up transformation matrices
         glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(cubePosX, cubePosY, cubePosZ));
         glm::mat4 view = camera.GetViewMatrix();
@@ -129,9 +142,20 @@ int main(){
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
+        glm::mat4 groundModel = glm::mat4(1.0f);
+        shader.setMat4("model", groundModel);
+        ground.Draw(shader);
+
         // Render cube
         cube.render();
-
+        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        grassShader.use();
+        grassShader.setMat4("view", view);
+        grassShader.setMat4("projection", projection);
+        grass.Draw(grassShader.ID);
+        glDisable(GL_BLEND);
         if (showAxes) {
             axes.render();
         }
@@ -144,6 +168,7 @@ int main(){
         glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getTextureID());
         skybox.render();
         glDepthFunc(GL_LESS);  
+
         // Setup ImGui
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -224,7 +249,7 @@ void processInput(GLFWwindow* window, bool& showAxes) {
         camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         if (action == GLFW_PRESS) {
             camera.LeftMousePressed = true;
         } else if (action == GLFW_RELEASE) {
