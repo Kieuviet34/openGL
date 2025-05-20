@@ -1,7 +1,9 @@
 #version 330 core
-in vec3 vertexColor;
+in vec2 TexCoord;           // from vertex shader
 out vec4 FragColor;
 
-void main() {
-    FragColor = vec4(vertexColor, 1.0);
+uniform sampler2D texture1; // make sure this matches the name you set in C++
+
+void main(){
+    FragColor = texture(texture1, TexCoord);
 }
