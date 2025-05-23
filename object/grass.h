@@ -6,20 +6,28 @@
 #include <vector>
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class Grass
 {
 public:
-    unsigned int VAO, VBO;
-    unsigned int texture;
-    std::vector<glm::vec3> positions;
-
     Grass(const char* texturePath, const std::vector<glm::vec3>& vegetationPositions);
-    void Draw(unsigned int shaderProgramID);
+
+    /// Draws all grass blades.  
+    /// @param shaderID  the GLSL program ID (must already have set view, projection, texture1)  
+    /// @param view      current view matrix  
+    /// @param cameraPos world‑space camera position  
+    void Draw(unsigned int shaderID,
+              const glm::mat4& view,
+              const glm::mat4& projection,
+              const glm::vec3& cameraPos);
 
 private:
     void setupMesh();
     unsigned int loadTexture(const char* path);
-};
 
+    unsigned int VAO, VBO;
+    unsigned int textureID;
+    std::vector<glm::vec3> positions;
+};
 #endif
