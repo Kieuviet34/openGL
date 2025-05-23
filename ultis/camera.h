@@ -44,8 +44,9 @@ public:
     {
         Position = position;
         WorldUp = up;
-        Yaw = yaw;
-        Pitch = pitch;
+        glm::vec3 direction = glm::normalize(glm::vec3(0.0f) - Position);
+        Pitch = glm::degrees(asin(direction.y));
+        Yaw   = glm::degrees(atan2(direction.z, direction.x));
         updateCameraVectors();
     }
     // constructor with scalar values
@@ -53,8 +54,9 @@ public:
     {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
-        Yaw = yaw;
-        Pitch = pitch;
+        glm::vec3 direction = glm::normalize(glm::vec3(0.0f) - Position);
+        Pitch = glm::degrees(asin(direction.y));
+        Yaw   = glm::degrees(atan2(direction.z, direction.x));
         updateCameraVectors();
     }
 
@@ -67,8 +69,6 @@ public:
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
-        if (!LeftMousePressed) return; // Only move if LMB is pressed
-
         float velocity = MovementSpeed * deltaTime;
         if (direction == FORWARD)
             Position += Front * velocity;
@@ -114,6 +114,21 @@ public:
 
     void SetLeftMousePressed(bool pressed) {
         LeftMousePressed = pressed;
+    }
+    void SetViewPreset(const glm::vec3& position, float yaw, float pitch) {
+        Position = position;
+        Yaw = yaw;
+        Pitch = pitch;
+        updateCameraVectors();
+    }
+
+    void SetPosition(const glm::vec3& newPosition) {
+        Position = newPosition;
+        updateCameraVectors();
+    }
+    void InvertPitch() {
+        Pitch = -Pitch;
+        updateCameraVectors(); // Keep UpdateCameraVectors as private
     }
 
 private:
