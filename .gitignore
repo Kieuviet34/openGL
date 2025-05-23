@@ -3,3 +3,5 @@ cube.h
 imgui.ini
 settings.json
 README.md
+test.cpp
+Makefile

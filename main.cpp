@@ -25,6 +25,11 @@ const int HEIGHT = 1080;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+glm::vec3 treePos    = glm::vec3(0.0f, 0.0f, 0.0f);
+int       grassCount =  5;      
+float     grassArea  = 25.0f;   
+std::vector<glm::vec3> vegetation;
+
 void processInput(GLFWwindow * window, bool& showAxes);
 void framebuffer_size_callback(GLFWwindow * window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -32,8 +37,9 @@ void scroll_callback(GLFWwindow * window, double xoffset, double yoffset);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(std::vector<std::string> faces);
+void regenerateGrass();
 
-Camera camera(glm::vec3(0.6f, .8f, 3.0f));
+Camera camera(glm::vec3(0.6f, 8.8f, 12.0f));
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -63,15 +69,24 @@ int main(){
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
+
+    enum ViewPreset { DEFAULT, TOP, FRONT, SIDE };
+    ViewPreset currentView = DEFAULT;
+
     // Shaders
     Shader shader("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
     Shader grassShader("shaders/grassVertex.gsls", "shaders/grassFragment.gsls");
     Shader skyboxShader("shaders/skybox.vs", "shaders/skybox.fs");
     Shader nmShader("shaders/normal_mapping.vs", "shaders/normal_mapping.fs");
+    Shader modelShader("shaders/model_loading.vs",
+                          "shaders/model_loading.fs");
+    Shader litShader("shaders/lit.vs", "shaders/lit.fs");
 
     // Scene objects
+    Model TreeModel("assets/model/tree/Tree.obj");
+    Model testModel("assets/model/plane/piper_pa18.obj");
     Axes axes;
-    Cube cube;
+
     Skybox skybox({
         "assets/skybox/right.jpg", "assets/skybox/left.jpg",
         "assets/skybox/top.jpg",   "assets/skybox/bottom.jpg",
@@ -79,10 +94,8 @@ int main(){
     });
     LightSphere lightViz(16,16, glm::vec3(1.0f,.8f,0.2f));
     Ground ground("assets/texture/brickwall.jpg");
-    Grass grass("assets/texture/grass.png", {
-        {-1.5f,0.0f,-0.48f}, {1.5f,0.0f,0.51f}, {0.0f,0.0f,0.7f},
-        {-0.3f,0.0f,-2.3f}, {0.5f,0.0f,-0.6f}
-    });
+    regenerateGrass();
+    Grass grass("assets/texture/grass.png", vegetation);
 
     bool showAxes = false;
     float cubePosX=0, cubePosY=0, cubePosZ=0;
@@ -101,6 +114,8 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsDark();
 
+    grassShader.use();
+    grassShader.setInt("texture1", 0);
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = (float)glfwGetTime();
@@ -111,8 +126,8 @@ int main(){
 
         // common matrices
         glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/HEIGHT, 0.1f, 100.0f);
-
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/HEIGHT, 0.1f, 1000.0f);
+        glDisable(GL_CULL_FACE);
         lightViz.Draw(projection, view, lightPos);
         // 1) NORMAL MAPPED & LIT FLOOR
         nmShader.use();
@@ -131,19 +146,28 @@ int main(){
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
-        // 2) RENDER CUBE
-        shader.use();
-        shader.setMat4("model", glm::translate(glm::mat4(1.0f), {cubePosX,cubePosY,cubePosZ}));
-        shader.setMat4("view", view);
-        shader.setMat4("projection", projection);
-        cube.render();
-
+        
+        litShader.use();
+        litShader.setMat4("projection", projection);
+        litShader.setMat4("view",       view);
+        litShader.setVec3("lightPos",   lightPos);
+        litShader.setVec3("viewPos",    camera.Position);
+        litShader.setVec3("lightColor", glm::vec3(1.0f));
+        // 2) RENDER MODEL (USED TO BE RENDER CUBE)
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glm::mat4 M = glm::translate(glm::mat4(1.0f), treePos);
+        litShader.setMat4("model", M);
+        testModel.Draw(litShader);
+        glDisable(GL_BLEND);
+        
         // 3) RENDER GRASS
         glEnable(GL_BLEND);
         grassShader.use();
-        grassShader.setMat4("view", view);
         grassShader.setMat4("projection", projection);
-        grass.Draw(grassShader.ID);
+        grassShader.setMat4("view",       view);
+        grassShader.setMat4("model",      glm::mat4(1.0f));
+        grass.Draw(grassShader.ID, view, projection,camera.Position);
         glDisable(GL_BLEND);
 
         if(showAxes) axes.render();
@@ -156,14 +180,55 @@ int main(){
         glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getTextureID());
         skybox.render();
         glDepthFunc(GL_LESS);
+        glEnable(GL_CULL_FACE);
         // ImGui window
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGui::Begin("Light & Settings");
+
+        
+        //tree pos
+        ImGui::SliderFloat3("Tree Position", glm::value_ptr(treePos),
+                    -20.0f, 20.0f);
+
+        // — Grass density —  
+        if (ImGui::SliderInt("Grass Count", &grassCount, 0, 100))
+        {
+            regenerateGrass();
+            grass = Grass("assets/texture/grass.png", vegetation);
+        }
         ImGui::Text("Move light");
         ImGui::DragFloat3("Light Pos", glm::value_ptr(lightPos), 0.1f);
         ImGui::Checkbox("Show Axes", &showAxes);
+        ImGui::Separator();
+        ImGui::Text("View Presets:");
+        if (ImGui::Button("Default View")) {
+            camera.Position = glm::vec3(0.6f, 8.8f, 12.0f);
+            camera.Yaw = -90.0f;
+            camera.Pitch = -40.0f;
+            camera.SetViewPreset(glm::vec3(0.6f, 8.8f, 12.0f), -90.0f, -20.0f);
+        }
+        if (ImGui::Button("Top View")) {
+            camera.Position = glm::vec3(0.0f, 250.0f, 0.1f);
+            camera.Yaw = -90.0f;
+            camera.Pitch = -89.9f;
+            camera.SetViewPreset(glm::vec3(0.0f, 250.0f, 0.1f), -90.0f, -89.9f);
+        }
+        if (ImGui::Button("Front View")) {
+            camera.Position = glm::vec3(0.0f, 5.0f, 150.0f);
+            camera.Yaw = -90.0f;
+            camera.Pitch = 0.0f;
+            camera.SetViewPreset(glm::vec3(0.0f, 5.0f, 150.0f), -90.0f, 0.0f);
+        }
+        if (ImGui::Button("Side View")) {
+            camera.Position = glm::vec3(150.0f, 5.0f, 0.0f);
+            camera.Yaw = 180.0f;
+            camera.Pitch = 0.0f;
+            camera.SetViewPreset(glm::vec3(150.0f, 5.0f, 0.0f), 180.0f, 0.0f);
+        }//fps
+        ImGui::Separator();
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -209,6 +274,11 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 void processInput(GLFWwindow* window, bool& showAxes) {
+    float speedMultiplier = 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        speedMultiplier = 8.0f; 
+    }
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
@@ -222,18 +292,19 @@ void processInput(GLFWwindow* window, bool& showAxes) {
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+        camera.ProcessKeyboard(FORWARD, deltaTime * speedMultiplier);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
+        camera.ProcessKeyboard(BACKWARD, deltaTime * speedMultiplier);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
+        camera.ProcessKeyboard(LEFT, deltaTime * speedMultiplier);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+        camera.ProcessKeyboard(RIGHT, deltaTime * speedMultiplier);
 }
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         if (action == GLFW_PRESS) {
             camera.LeftMousePressed = true;
+            firstMouse = true;        // <— ADD THIS
         } else if (action == GLFW_RELEASE) {
             camera.LeftMousePressed = false;
         }
@@ -275,4 +346,29 @@ unsigned int loadTexture(char const * path)
     }
 
     return textureID;
+}
+void regenerateGrass()
+{
+    vegetation.clear();
+
+    // We’ll use grassCount as “blades per row”,
+    // so total blades = grassCount * grassCount
+    int bladesPerRow = grassCount;
+    vegetation.reserve(bladesPerRow * bladesPerRow);
+
+    for (int i = 0; i < bladesPerRow; ++i)
+    {
+        for (int j = 0; j < bladesPerRow; ++j)
+        {
+            // normalized [0..1]
+            float u = (i + ((float)rand() / RAND_MAX)) / bladesPerRow;
+            float v = (j + ((float)rand() / RAND_MAX)) / bladesPerRow;
+
+            // remap to [–0.5..+0.5] then scale by grassArea
+            float x = (u - 0.5f) * grassArea;
+            float z = (v - 0.5f) * grassArea;
+
+            vegetation.emplace_back(x, 0.0f, z);
+        }
+    }
 }
