@@ -38,11 +38,13 @@ Water::~Water() {
 
 void Water::BindReflectionFrameBuffer() {
     glBindFramebuffer(GL_FRAMEBUFFER, reflectionFBO);
+    glViewport(0, 0, reflectionWidth, reflectionHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Water::BindRefractionFrameBuffer() {
     glBindFramebuffer(GL_FRAMEBUFFER, refractionFBO);
+    glViewport(0, 0, reflectionWidth, reflectionHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
