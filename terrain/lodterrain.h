@@ -15,10 +15,10 @@ public:
                float scale,
                float heightScale,
                float smoothness,
-               const std::string& a,
-               const std::string& n,
-               const std::string& r,
-               const std::string& ao);
+               const std::string& albedoPath,
+               const std::string& normalPath,
+               const std::string& roughnessPath,
+               const std::string& aoPath);
     ~LodTerrain();
 
     void Draw(const glm::vec3& camPos);
@@ -43,10 +43,17 @@ private:
     int lodLevels_;
     std::size_t tileSize_;
     float scale_, heightScale_, smoothness_;
-    float yOffset_;               
+    float yOffset_;
     GLuint albedoTex_, normalTex_, roughnessTex_, aoTex_;
     FastNoiseLite detailNoise_, riverNoise_;
 
+    // Initialization methods
+    void initializeNoise();
+    void initializeTextures(const std::string& albedoPath,
+                           const std::string& normalPath,
+                           const std::string& roughnessPath,
+                           const std::string& aoPath);
+    void initializeTiles();
     void generateLODs(Tile& tile);
     void buildTileMesh(TileLOD& lod, const Tile& tile, std::size_t resolution);
     void loadTexture(const std::string& path, GLuint& texID);
