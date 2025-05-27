@@ -65,7 +65,7 @@ void LightSphere::Draw(const glm::mat4 &projection,
     shader.setMat4("projection", projection);
     shader.setMat4("view", view);
     glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-    model = glm::scale(model, glm::vec3(0.1f)); // small ball
+    model = glm::scale(model, glm::vec3(0.3f)); 
     shader.setMat4("model", model);
     shader.setVec3("objectColor", color);
 

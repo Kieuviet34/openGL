@@ -129,7 +129,7 @@ void Water::InitializeFrameBuffer(GLuint& fbo,
 }
 
 void Water::CreateWaterQuad() {
-    float size = 50.0f; // unit quad
+    float size = 200.0f; // unit quad
     float vertices[] = {
         -size, 0, -size,  0,0,
          size, 0, -size,  1,0,
