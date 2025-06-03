@@ -1,6 +1,7 @@
 #include "light.h"
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
+#include <math.h>
 
 LightSphere::LightSphere(int latSeg, int lonSeg, glm::vec3 col)
     : shader("shaders/light.vs", "shaders/light.fs"), color(col)
@@ -59,13 +60,20 @@ void LightSphere::buildMesh(int latSeg, int lonSeg) {
 
 void LightSphere::Draw(const glm::mat4 &projection,
                        const glm::mat4 &view,
-                       const glm::vec3 &position)
+                       const glm::vec3 &position,
+                       float dayFactor)
 {
     shader.use();
     shader.setMat4("projection", projection);
     shader.setMat4("view", view);
+
+    // make the sphere BIGGER at night, smaller by day:
+    float baseSize = 0.3f;
+    float nightBump = 2.0f;      // how much bigger at midnight
+    float size = glm::mix(baseSize * nightBump, baseSize, dayFactor);
+
     glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-    model = glm::scale(model, glm::vec3(0.3f)); 
+    model = glm::scale(model, glm::vec3(size));
     shader.setMat4("model", model);
     shader.setVec3("objectColor", color);
 

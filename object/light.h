@@ -14,14 +14,15 @@ public:
     // render at given position with provided projection/view
     void Draw(const glm::mat4 &projection,
               const glm::mat4 &view,
-              const glm::vec3 &position);
+              const glm::vec3 &position,
+              float dayFactor);
 
 private:
     unsigned int VAO, VBO, EBO;
     size_t indexCount;
     Shader shader;        // simple color shader
     glm::vec3 color;
-
+    
     void buildMesh(int latSeg, int lonSeg);
 };
 
