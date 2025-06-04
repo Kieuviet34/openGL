@@ -1,75 +1,93 @@
 # 🌄 Dự Án Tạo Địa Hình Bằng OpenGL
 
 ## 📝 Giới Thiệu
-Dự án này sử dụng OpenGL để tạo và hiển thị địa hình 3D dựa trên **Perlin Noise** và các thuật toán khác. Đây là một công cụ học tập tuyệt vời để tìm hiểu về đồ họa máy tính, lập trình OpenGL, và cách tạo địa hình tự nhiên.
+Dự án này tập trung vào việc tạo và hiển thị địa hình 3D trong môi trường thời gian thực sử dụng OpenGL. Chương trình cho phép người dùng tương tác với mô hình địa hình thông qua giao diện đồ họa và điều khiển camera.
 
-## 🚀 Tính Năng
-- Tạo địa hình 3D bằng **Perlin Noise**.
-- Hiển thị các trục tọa độ (Axes) để hỗ trợ định hướng.
-- Tích hợp giao diện người dùng bằng **ImGui** để điều chỉnh tham số.
-- Hỗ trợ camera di chuyển tự do trong không gian 3D.
+## 🚀 Tính Năng Chính
+- Tạo địa hình 3D với độ cao ngẫu nhiên
+- Điều khiển camera:
+  - Di chuyển: W, A, S, D
+  - Xoay camera: Chuột
+  - Điều chỉnh tốc độ di chuyển: Scroll chuột
+- Chế độ hiển thị:
+  - Fill mode (F)
+  - Line mode (L)
+  - Point mode (P)
 
----
+## 📦 Cài Đặt (Ubuntu/Linux)
 
-## 📦 Cài Đặt Các Thư Viện Cần Thiết
-
-### 1️⃣ Cài Đặt Trình Biên Dịch `g++`
+### Các thư viện cần thiết
 ```bash
+# Cập nhật package manager
 sudo apt update
-sudo apt install build-essential
-```
 
-### 2️⃣ Cài Đặt Thư Viện `GLFW`
-```bash
+# Cài đặt công cụ build
+sudo apt install build-essential cmake
+
+# Cài đặt các thư viện OpenGL
+sudo apt install libgl1-mesa-dev
+sudo apt install libglew-dev
 sudo apt install libglfw3 libglfw3-dev
-```
-
-### 3️⃣ Cài Đặt Thư Viện `GLM`
-```bash
 sudo apt install libglm-dev
+sudo apt-get update
+sudo apt-get install libassimp-dev
+# Cài đặt thư viện xử lý ảnh (nếu cần)
+sudo apt install libsoil-dev
 ```
 
-### 4️⃣ Cài Đặt Các Thư Viện Bổ Sung
+## 🛠️ Biên Dịch và Chạy
+
+1. **Tạo thư mục build**:
 ```bash
-sudo apt install libglew-dev libgl1-mesa-dev
+mkdir build
+cd build
 ```
 
----
-
-## 🛠️ Hướng Dẫn Thiết Lập
-
-1. **Clone dự án từ GitHub**:
-    ```bash
-    git clone https://github.com/your-repo-name.git
-    cd your-repo-name
-    ```
-
-2. **Biên dịch và chạy dự án**:
-    ```bash
-    make
-    ```
+2. **Biên dịch project**:
+```bash
+cmake ..
+make
+```
 
 3. **Chạy chương trình**:
-    Sau khi biên dịch thành công, chương trình sẽ tự động chạy.
+```bash
+./opengl
+```
 
----
+## 🎮 Hướng Dẫn Sử Dụng
+
+### Điều Khiển Camera
+- `W` - Di chuyển tiến
+- `S` - Di chuyển lùi
+- `A` - Di chuyển sang trái
+- `D` - Di chuyển sang phải
+- `Mouse` - Xoay camera
+- `Scroll` - Điều chỉnh fov
+
+### Chế Độ Hiển Thị
+- `Esc` - Thoát chương trình
+
+## 🔧 Xử Lý Lỗi Thường Gặp
+
+1. **Lỗi thư viện không tìm thấy**:
+   - Kiểm tra lại việc cài đặt các thư viện
+   - Chạy `sudo ldconfig` để cập nhật cache thư viện
+
+2. **Lỗi biên dịch**:
+   - Đảm bảo đã cài đặt đầy đủ các thư viện phát triển
+   - Kiểm tra version của compiler (yêu cầu GCC 7.0+)
 
 ## 📚 Tài Liệu Tham Khảo
-
-- [LearnOpenGL](https://learnopengl.com/) - Trang web học OpenGL từ cơ bản đến nâng cao.
-- [Video Hướng Dẫn Cài Đặt OpenGL trên Linux](https://www.youtube.com/watch?v=45MIykWJ-C4) - Video hướng dẫn chi tiết.
-- [Perlin Noise Explained](https://www.youtube.com/watch?v=Qf4dIN99e2w) - Video giải thích về Perlin Noise.
-
----
-
-## 📌 Ghi Chú
-- Đảm bảo rằng bạn đã cài đặt đầy đủ các thư viện trước khi biên dịch.
-- Nếu gặp lỗi, hãy kiểm tra lại các bước cài đặt hoặc tham khảo tài liệu tại [LearnOpenGL](https://learnopengl.com/).
+- [LearnOpenGL](https://learnopengl.com/)
+- [OpenGL Documentation](https://docs.gl/)
+- [GLFW Documentation](https://www.glfw.org/docs/latest/)
 
 ---
 
-## 💡 Ý Tưởng Phát Triển
-- Xuất địa hình ra file để sử dụng trong các phần mềm khác.
+## 💡 Phát Triển Tương Lai
+- Thêm texture cho địa hình
+- Tối ưu hóa hiệu suất render
+- Thêm các hiệu ứng môi trường
 
-Chúc bạn học tập vui vẻ! 🎉
+Mọi đóng góp và phản hồi đều được chào đón! 
 
